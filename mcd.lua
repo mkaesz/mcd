@@ -10,6 +10,28 @@ local msc = {
   models = {"product"},
 
   start = function(self)
+    self.setup_db(self)
+    self.setup_models(self)
+  end,
+
+  setup_db = function(self)
+      box.once('init', function()
+          cnt_models = self.tablelength(self.models)
+          log.info("Found " .. cnt_models .. " database schemas.")
+
+          for i=1,cnt_models,1 do
+            box.schema.create_space(self.models[i])
+            box.space.product:create_index(
+                "primary", {type = 'hash', parts = {1, 'unsigned'}}
+            )
+            box.space.product:create_index(
+                "status", {type = "tree", parts = {2, 'str'}}
+            )
+          end
+      end)
+  end,
+
+  setup_models = function(self)
     cnt_models = self.tablelength(self.models)
     log.info("Found " .. cnt_models .. " models.")
 
@@ -34,10 +56,10 @@ local msc = {
           log.info('Successfully started the application!')
           return true
         else
-          log.error('Schema compilation failed')
+          log.error('Model' .. self.models[i] .. ' compilation failed')
         end
       else
-        log.info('Schema creation failed')
+        log.info('Model' .. self.models[i] .. ' creation failed')
       end
       return false
     end
