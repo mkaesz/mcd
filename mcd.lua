@@ -52,7 +52,7 @@ local msc = {
         if ok_cm then
           log.info("Compiled model '" .. self.models[i] .. "'" )
           -- start the game
-          -- self.product_model = compiled_model
+          self.product_model = compiled_model
           log.info('Successfully started the application!')
           return true
         else
@@ -63,6 +63,23 @@ local msc = {
       end
       return false
     end
+  end,
+
+  get_products = function(self)
+    local result={}
+    for _, tuple in box.space.product:select{} do
+      local ok, product = self.product_model.unflatten(tuple)
+      table.insert(result, product)
+      return result
+    end
+  end,
+
+  add_product = function(self, product)
+    local ok, tuple = self.product_model.flatten(product)
+    if not ok then
+      return false
+    end
+    box.space.product:replace(tuple)
   end,
 
   tablelength = function(T)
